@@ -2,14 +2,18 @@ import pandas as pd
 import time
 import requests
 from urllib.parse import quote 
+import os
 
 # Read Excel file
 df = pd.read_excel('./github-to-gitlab.xlsx')
 
-print("")
-github_token = input("Enter the GitHub access token: ")
-print("")
-gitlab_token = input("Enter the GitLab access token: ")
+
+github_token = os.getenv('GITHUB_TOKEN')
+gitlab_token = os.getenv('GITLAB_TOKEN')
+# print("")
+# github_token = input("Enter the GitHub access token: ")
+# print("")
+# gitlab_token = input("Enter the GitLab access token: ")
 print("")
 print("Importing GitHub to GitLab")
 print("")
