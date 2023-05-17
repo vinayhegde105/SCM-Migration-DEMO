@@ -8,8 +8,10 @@ import os
 df = pd.read_excel('./github-to-gitlab.xlsx')
 
 
-github_token = os.getenv('GITHUB_TOKEN')
-gitlab_token = os.getenv('GITLAB_TOKEN')
+# github_token = os.getenv('GITHUB_TOKEN')
+# gitlab_token = os.getenv('GITLAB_TOKEN')
+github_token = "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"
+gitlab_token = "glpat-bE-ovizYnaJFeYspkcDK"
 # print("")
 # github_token = input("Enter the GitHub access token: ")
 # print("")
