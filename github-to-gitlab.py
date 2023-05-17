@@ -1,7 +1,7 @@
 import pandas as pd
 import time
 import requests
-from urllib.parse import quote 
+from urllib.parse import quote  
 import os
 
 # Read Excel file
