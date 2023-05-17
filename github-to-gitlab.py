@@ -5,7 +5,7 @@ from urllib.parse import quote
 import os    
 
 # Read Excel file
-df = pd.read_excel('github-to-gitlab.xlsx')
+df = pd.read_excel('./github-to-gitlab.xlsx')
 
 
 github_token = os.getenv('GITHUB_TOKEN')
@@ -27,6 +27,7 @@ for index, row in df.iterrows():
     gitlab_target_namespace = row['gitlab_target_namespace']
 
     repo_id_endpoint = f"https://api.github.com/repos/{github_username}/{repo_name_to_import}"
+    print(repo_id_endpoint)
     repo_id_headers = {
         'Authorization': f'token {github_token}'
     }
