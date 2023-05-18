@@ -129,39 +129,37 @@ for index, row in df.iterrows():
 # Create success.csv
 success_df = pd.DataFrame(success_data, columns=['Repository Name', 'Status Code'])
 success_df.index = success_df.index+1
-success_df.to_csv('github-to-gitlab-success.csv')
+success_df.to_csv('github-to-gitlab-success.csv', index_label='Sr')
 
 # Create failure.csv
 failure_df = pd.DataFrame(failure_data, columns=['Repository Name', 'Status Code', 'Error Message'])
 failure_df.index =failure_df.index+1
-failure_df.to_csv('github-to-gitlab-failure.csv')
+failure_df.to_csv('github-to-gitlab-failure.csv', index_label='Sr')
 print("")
 print("")
 print("New GitLab Repositories URL")
-print("")
-print("Migration has been completed for the Repositories...")
 for url in gitlab_urls:
     print(url)
 print("")
 print("")
-if len(gitlab_urls) != 0:
-    package_url_1 = f"https://gitlab.com/api/v4/projects/{encoded_repo_path}/packages/generic/github-to-gitlab/0.0.1/success.csv"
-    success_files=[('',('github-to-gitlab-success.csv',open('github-to-gitlab-success.csv','rb'),'text/csv'))]
-    headers = {'PRIVATE-TOKEN': gitlab_token}
-    response_1 = requests.request("PUT", package_url_1, headers=headers, files=success_files)
-    if response_1.status_code ==201:
-        print("Published success.csv file to Package Registry in GitLab ")
-    else:
-        print (f"Error while publishing success.csv to Package Registry with status code {response_1.status_code} \n {response_1.text}")
+package_url_1 = f"https://gitlab.com/api/v4/projects/{encoded_repo_path}/packages/generic/github-to-gitlab/0.0.1/success.csv"
+headers = {'PRIVATE-TOKEN': gitlab_token}
+with open('github-to-gitlab-success.csv', 'rb') as file:
+    data = file.read()
+    response_1 = requests.put(package_url_1, headers=headers, data=data)
 
-    package_url_2 = f"https://gitlab.com/api/v4/projects/{encoded_repo_path}/packages/generic/github-to-gitlab/0.0.1/failure.csv"
-    failure_files=[('',('github-to-gitlab-failure.csv',open('github-to-gitlab-failure.csv','rb'),'text/csv'))]
-    response_2 = requests.request("PUT", package_url_2, headers=headers, files=failure_files)
-    if response_2.status_code ==201:
-        print("Published failure.csv file to Package Registry in GitLab ")
-    else:
-        print (f"Error while publishing failure.csv to Package Registry with status code {response_2.status_code} \n {response_2.text}")
+if response_1.status_code == 201:
+    print("Published success.csv file to Package Registry in GitLab")
 else:
-    print("")
+    print(f"Error while publishing success.csv to Package Registry with status code {response_1.status_code}\n{response_1.text}")
 
 
+package_url_2 = f"https://gitlab.com/api/v4/projects/{encoded_repo_path}/packages/generic/github-to-gitlab/0.0.1/failure.csv"
+with open('github-to-gitlab-failure.csv', 'rb') as file:
+    data = file.read()
+    response_2 = requests.put(package_url_2, headers=headers, data=data)
+
+if response_2.status_code == 201:
+    print("Published failure.csv file to Package Registry in GitLab")
+else:
+    print(f"Error while publishing success.csv to Package Registry with status code {response_2.status_code}\n{response_2.text}")
