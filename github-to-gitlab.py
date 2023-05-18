@@ -92,10 +92,15 @@ for index, row in df.iterrows():
         gitlab_branches=total_branches_2
 
         if github_branches==gitlab_branches :
-            print(f"Branch Count are same for both the repository {repo_name_to_import}= {gitlab_branches}.")
+            print("Repository branch validation is in progress...")
+            print("")
+            print(f"Branch counts are same for both the repository i.e {gitlab_branches}")
             print("")
             print("")
         else:
+            print("Repository branch validation is in progress...")
+            print("")
+            print("")
             print(f"Branch Count are not same for both the repository {repo_name_to_import}.")
             print("")
             print("")
