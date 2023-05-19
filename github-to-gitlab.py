@@ -7,12 +7,6 @@ from urllib.parse import quote
 # Read Excel file
 df = pd.read_excel('./github-to-gitlab.xlsx')
 
-# print("")
-# github_token = input("Enter the GitHub access token: ")
-# print("")
-# gitlab_token = input("Enter the GitLab access token: ")
-# print("")
-# repo_path = input("Enter the gitlab project path for storing the Migration Logs [gitlab_namespace/project_name]: ")
 github_token = os.getenv('GITHUB_TOKEN')
 gitlab_token = os.getenv('GITLAB_TOKEN')
 repo_path = os.getenv('GITLAB_LOG_PROJECT_PATH')
@@ -23,6 +17,8 @@ print("")
 gitlab_urls = []
 success_data = []
 failure_data = []
+validation_data=[]
+
 for index, row in df.iterrows():
     sr = row['sr']
     github_username = row['github_username']
@@ -60,7 +56,9 @@ for index, row in df.iterrows():
         gitlab_urls.append(f'https://gitlab.com/{gitlab_target_namespace}/{repo_name_to_import}')
         time.sleep(10)
         print()
+        print("")
        #GitHub Branches Count
+        print(f"Source Repository - {repo_name_to_import} branch validation is in progress...")
         per_page = 100
         url_1 = f'https://api.github.com/repos/{github_username}/{repo_name_to_import}/branches'
         headers_1 = {'Authorization': f'Bearer {github_token}'}
@@ -82,84 +80,16 @@ for index, row in df.iterrows():
                 else:
                     url_1 = None
             else:
-                print(f'Request failed with status code {response.status_code}')
+                print(f'Request failed with status code {response.status_code} \n {response.text}')
                 break
 
         github_branches=total_branches
 
-        ## Gitlab Branches Count
-        path=f"{gitlab_target_namespace}/{repo_name_to_import}"
-        encoded_path= quote(path,safe='')
-        url_2 = f'https://gitlab.com/api/v4/projects/{encoded_path}/repository/branches?per_page=1'
-        headers_2 = {'PRIVATE-TOKEN': gitlab_token}
+        ### GitHub Commit Count
+        print(f"Source Repository - {repo_name_to_import} commit validation is in progress...")
+        api_url = f"https://api.github.com/repos/{github_username}/{repo_name_to_import}/commits"
+        headers = {"Accept": "application/vnd.github.v3+json", 'Authorization': f'Bearer {github_token}'}
+        params = {"per_page": 100} 
 
-        response = requests.get(url_2, headers=headers_2)
-
-        if response.status_code == 200:
-            total_branches_2 = int(response.headers.get('X-Total'))
-        else:
-            print(f'Request failed with status code {response.status_code}')
-        gitlab_branches=total_branches_2
-
-        if github_branches==gitlab_branches :
-            print("Repository branch validation is in progress...")
-            print("")
-            print("Validation Done")
-            print("")
-            print("")
-            print(f"Branch counts are same for both the repository i.e {gitlab_branches}")
-            print("")
-            print("")
-        else:
-            print("Repository branch validation is in progress...")
-            print("")
-            print("Validation Done")
-            print("")
-            print("")
-            print(f"Branch Count are not same for both the repository {repo_name_to_import}.")
-            print("")
-            print("")
-
-    else:
-        error_message =f"Error occurred while importing {repo_name_to_import} from GitHub to GitLab with status code: {import_response.status_code} \n {import_response.text}"
-        print(error_message)
-        failure_data.append([repo_name_to_import, import_response.status_code, error_message])
-
-    # import_response.raise_for_status()
-# Create success.csv
-success_df = pd.DataFrame(success_data, columns=['Repository Name', 'Status Code'])
-success_df.index = success_df.index+1
-success_df.to_csv('github-to-gitlab-success.csv', index_label='Sr')
-
-# Create failure.csv
-failure_df = pd.DataFrame(failure_data, columns=['Repository Name', 'Status Code', 'Error Message'])
-failure_df.index =failure_df.index+1
-failure_df.to_csv('github-to-gitlab-failure.csv', index_label='Sr')
-print("")
-print("")
-print("New GitLab Repositories URL")
-for url in gitlab_urls:
-    print(url)
-print("")
-print("")
-package_url_1 = f"https://gitlab.com/api/v4/projects/{encoded_repo_path}/packages/generic/github-to-gitlab/0.0.1/success.csv"
-headers = {'PRIVATE-TOKEN': gitlab_token}
-with open('github-to-gitlab-success.csv', 'rb') as file:
-    data = file.read()
-    response_1 = requests.put(package_url_1, headers=headers, data=data)
-
-if response_1.status_code == 201:
-    print("Published success.csv file to Package Registry in GitLab")
-else:
-    print(f"Error while publishing success.csv to Package Registry with status code {response_1.status_code}\n{response_1.text}")
-
-
-package_url_2 = f"https://gitlab.com/api/v4/projects/{encoded_repo_path}/packages/generic/github-to-gitlab/0.0.1/failure.csv"
-with open('github-to-gitlab-failure.csv', 'rb') as file:
-    data = file.read()
-    response_2 = requests.put(package_url_2, headers=headers, data=data)
-
-if response_2.status_code == 201:
-    print("Published failure.csv file to Package Registry in GitLab")
-else:
-    print(f"Error while publishing success.csv to Package Registry with status code {response_2.status_code}\n{response_2.text}")
+        commit_count = 0
+        page = 1
