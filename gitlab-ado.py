@@ -182,7 +182,7 @@ for index, row in df.iterrows():
         error_message=f"Error occurred while importing {project_to_import} from GitLab to Azure Repos with status code: {import_response.status_code} \n {import_response.text}"
         print(error_message)
         failure_data.append([project_to_import, import_response.status_code, error_message])
-        import_response.raise_for_status()
+#         import_response.raise_for_status()
 
 # Create success.csv
 success_df = pd.DataFrame(success_data, columns=['Repository Name', 'Status Code'])
