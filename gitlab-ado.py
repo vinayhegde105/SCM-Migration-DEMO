@@ -28,6 +28,7 @@ for index, row in df.iterrows():
     project_to_import = row['project_to_import']
     azure_target_namespace = row['azure_target_namespace']
 
+
 # Create Azure DevOps repository
     repo_data = {
         "name": project_to_import
@@ -125,9 +126,9 @@ for index, row in df.iterrows():
 
         if response.status_code == 200:
             total_branches_2 = int(response.headers.get('X-Total'))
+            gitlab_branches=total_branches_2
         else:
             print(f'Request failed with status code {response.status_code} \n {response.text}')
-        gitlab_branches=total_branches_2
 
         ##GitLab Commit Count
         print(f"Source Repository - {project_to_import} commit validation is in progress...")
@@ -149,10 +150,10 @@ for index, row in df.iterrows():
                     page += 1
                 else:
                     break 
+                gitlab_commit_count=commit_count
             else:
                 print(f"Error: {response.status_code} \n {response.text}")
                 break
-        gitlab_commit_count=commit_count
         ##Azure Branch Count
         print(f"Target Repository - {project_to_import} branch validation is in progress...")
         url = f'https://dev.azure.com/{azure_target_namespace}/_apis/git/repositories/{project_to_import}/refs?filter=heads/&api-version=7.0'
@@ -162,9 +163,9 @@ for index, row in df.iterrows():
         if response.status_code == 200:
             branch_data = response.json()
             branch_count = len(branch_data['value'])
+            azure_branches=branch_count
         else:
             print(f'Request failed with status code {response.status_code}')
-        azure_branches=branch_count
         time.sleep(15)
         ## Azure Commit Count
         print(f"Target Repository - {project_to_import} commit validation is in progress...")
@@ -195,10 +196,10 @@ for index, row in df.iterrows():
                     params['$skip'] += page_size
                 else:
                     break  # All commits retrieved
+                azure_commit_count=commit_count
             else:
                 print(f'Request failed with status code {response.status_code}')
                 break
-        azure_commit_count=commit_count
         print("")
         print("")
         if azure_branches==gitlab_branches :
