@@ -150,10 +150,10 @@ for index, row in df.iterrows():
                     page += 1
                 else:
                     break 
-                gitlab_commit_count=commit_count
             else:
                 print(f"Error: {response.status_code} \n {response.text}")
                 break
+        gitlab_commit_count=commit_count
         ##Azure Branch Count
         print(f"Target Repository - {project_to_import} branch validation is in progress...")
         url = f'https://dev.azure.com/{azure_target_namespace}/_apis/git/repositories/{project_to_import}/refs?filter=heads/&api-version=7.0'
@@ -172,7 +172,7 @@ for index, row in df.iterrows():
         path=f"{gitlab_project_namespace}/{project_to_import}"
         encoded_path= quote(path,safe='')
         url = f'https://gitlab.com/api/v4/projects/{encoded_path}'
-        response = requests.get(url)
+        response = requests.get(url,headers=headers)
         if response.status_code == 200:
             project_info = response.json()
             default_branch = project_info['default_branch']
@@ -196,10 +196,10 @@ for index, row in df.iterrows():
                     params['$skip'] += page_size
                 else:
                     break  # All commits retrieved
-                azure_commit_count=commit_count
             else:
                 print(f'Request failed with status code {response.status_code}')
                 break
+        azure_commit_count=commit_count
         print("")
         print("")
         if azure_branches==gitlab_branches :
