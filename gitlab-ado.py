@@ -27,7 +27,6 @@ for index, row in df.iterrows():
     project_to_import = row['project_to_import']
     azure_target_namespace = row['azure_target_namespace']
 
-
 # Create Azure DevOps repository
     repo_data = {
         "name": project_to_import
@@ -44,13 +43,62 @@ for index, row in df.iterrows():
         print(error_message)
         failure_data.append([project_to_import, repo_response.status_code, error_message])
     # repo_response.raise_for_status()
+    organization = azure_target_namespace.split('/')[0]
+    project = azure_target_namespace.split('/')[1]
 
+    project_url =f"https://dev.azure.com/{organization}/_apis/projects/{project}?api-version=7.0"
+    response = requests.request("GET", project_url, auth=("", azure_token))
+    if response.status_code == 200:
+        project_id = response.json()['id']
+    else:
+        error_message =f"Error occurred while getting the project id of {project} with status code: {response.status_code} \n {response.text}"
+        print(error_message)
+        failure_data.append([project_to_import, response.status_code, error_message])
+
+    org_url = f"https://dev.azure.com/{organization}/_apis/serviceendpoint/endpoints?api-version=7.0"
+    payload = json.dumps({
+    "authorization": {
+        "scheme": "UsernamePassword",
+        "parameters": {
+        "username": "",
+        "password": gitlab_token
+        }
+    },
+    "data": {},
+    "description": "",
+    "name": "GitLab",
+    "serviceEndpointProjectReferences": [
+        {
+        "description": "",
+        "name": "GitLab",
+        "projectReference": {
+            "id": project_id,
+            "name": project
+        }
+        }
+    ],
+    "type": "git",
+    "url": "https://gitlab.com",
+    "isShared": False
+    })
+    headers = {
+    'Content-Type': 'application/json'
+    }
+    response = requests.request("POST", org_url,auth=("", azure_token),headers=headers, data=payload)
+    if response.status_code == 200:
+        endpoint_id = response.json()['id']
+    else:
+        error_message =f"Error occurred while creating service endpoint with status code: {response.status_code} \n {response.text}"
+        print(error_message)
+        failure_data.append([project_to_import, response.status_code, error_message])
     # Import from GitLab
     data = {
         "parameters": {
             "gitSource": {
                 "url": f"https://gitlab.com/{gitlab_project_namespace}/{project_to_import}.git"
-            }
+            },
+        "serviceEndpointId": endpoint_id,
+        "deleteServiceEndpointAfterImportIsDone": True
         }
     }
     import_url = f"https://dev.azure.com/{azure_target_namespace}/_apis/git/repositories/{project_to_import}/importRequests?api-version=7.0"
@@ -69,8 +117,10 @@ for index, row in df.iterrows():
         path=f"{gitlab_project_namespace}/{project_to_import}"
         encoded_path= quote(path,safe='')
         url_2 = f'https://gitlab.com/api/v4/projects/{encoded_path}/repository/branches?per_page=1'
-
-        response = requests.get(url_2)
+        headers = {
+        'PRIVATE-TOKEN': gitlab_token
+        }
+        response = requests.get(url_2,headers=headers)
 
         if response.status_code == 200:
             total_branches_2 = int(response.headers.get('X-Total'))
@@ -88,7 +138,7 @@ for index, row in df.iterrows():
 
         while True:
             params["page"] = page
-            response = requests.get(api_url, params=params)
+            response = requests.get(api_url,headers=headers,params=params)
             
             if response.status_code == 200:
                 commits = response.json()
@@ -182,7 +232,7 @@ for index, row in df.iterrows():
         error_message=f"Error occurred while importing {project_to_import} from GitLab to Azure Repos with status code: {import_response.status_code} \n {import_response.text}"
         print(error_message)
         failure_data.append([project_to_import, import_response.status_code, error_message])
-#         import_response.raise_for_status()
+    # import_response.raise_for_status()
 
 # Create success.csv
 success_df = pd.DataFrame(success_data, columns=['Repository Name', 'Status Code'])
