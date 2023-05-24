@@ -98,8 +98,10 @@ for index, row in df.iterrows():
         path=f"{gitlab_project_namespace}/{project_to_import}"
         encoded_path= quote(path,safe='')
         url_2 = f'https://gitlab.com/api/v4/projects/{encoded_path}/repository/branches?per_page=1'
-
-        response = requests.get(url_2)
+        headers = {
+        'PRIVATE-TOKEN': gitlab_token
+        }
+        response = requests.get(url_2,headers=headers)
 
         if response.status_code == 200:
             total_branches_2 = int(response.headers.get('X-Total'))
@@ -117,7 +119,7 @@ for index, row in df.iterrows():
 
         while True:
             params["page"] = page
-            response = requests.get(api_url, params=params)
+            response = requests.get(api_url,headers=headers, params=params)
             
             if response.status_code == 200:
                 commits = response.json()
