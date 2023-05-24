@@ -29,15 +29,28 @@ for index, row in df.iterrows():
     project_to_import = row['project_to_import']
     github_username = row['github_username']
 
+    project_id=f"{gitlab_project_namespace}/{project_to_import}"
+    encoded_path= quote(project_id,safe='')
+    api_url = f"https://gitlab.com/api/v4/projects/{encoded_path}"
+    headers = {
+        'PRIVATE-TOKEN': gitlab_token
+    }
+    response = requests.get(api_url, headers=headers)
+
+    if response.status_code == 200:
+        project_data = response.json()
+        visibility = project_data.get("visibility")
+    else:
+        print("Error occurred while fetching project details")
+
     data = {
         "vcs": "git",
-        "vcs_url": f"https://gitlab.com/{gitlab_project_namespace}/{project_to_import}.git"
+        "vcs_url": f"https://oauth2:{gitlab_token}@gitlab.com/{gitlab_project_namespace}/{project_to_import}.git"
     }
     repo_data = {
         "name": project_to_import,
-        "private": False,
+        "private": False if visibility == "public" else True
     }
-
     action_disable_data = {
         "enabled": False
     }
