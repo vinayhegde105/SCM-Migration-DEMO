@@ -122,9 +122,9 @@ for index, row in df.iterrows():
 
         if response.status_code == 200:
             total_branches_2 = int(response.headers.get('X-Total'))
+            gitlab_branches=total_branches_2
         else:
             print(f'Request failed with status code {response.status_code} \n {response.text}')
-        gitlab_branches=total_branches_2
         time.sleep(15)
 
         ##GitLab Commit Count
