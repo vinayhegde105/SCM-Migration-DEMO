@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+    
+    parameters {
+        password(name: 'GITLAB_TOKEN', defaultValue: '', description: 'Enter GITLAB_TOKEN',)
+        password(name: 'AZURE_TOKEN', defaultValue: '', description: 'Enter AZURE_TOKEN')
+        string(name: 'GITLAB_LOG_PROJECT_PATH', defaultValue: '', description: 'Kindly paste in below format: \ngitlab_namespace/project_name')
+    }
+    
+    
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/vinayhegde105/SCM-Migration-DEMO.git'
+            }
+        }
+        
+        stage('Execute Commands') {
+            steps {
+                script {
+                    sh '''
+                        export gitlab_token=$GITLAB_TOKEN
+                        export azure_token=$AZURE_TOKEN
+                        export repo_path=$GITLAB_LOG_PROJECT_PATH
+                        python3 gitlab-github/gitlab-github.py
+                    '''
+                    }
+                }
+            }
+        }
+    }
