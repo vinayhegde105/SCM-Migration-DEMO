@@ -3,7 +3,7 @@ pipeline {
     
     parameters {
         password(name: 'GITLAB_TOKEN', defaultValue: '', description: 'Enter GITLAB_TOKEN',)
-        password(name: 'AZURE_TOKEN', defaultValue: '', description: 'Enter AZURE_TOKEN')
+        password(name: 'GITHUB_TOKEN', defaultValue: '', description: 'Enter GITHUB_TOKEN')
         string(name: 'GITLAB_LOG_PROJECT_PATH', defaultValue: '', description: 'Kindly paste in below format: \ngitlab_namespace/project_name')
     }
     
@@ -20,7 +20,7 @@ pipeline {
                 script {
                     sh '''
                         export gitlab_token=$GITLAB_TOKEN
-                        export azure_token=$AZURE_TOKEN
+                        export github_token=$GITHUB_TOKEN
                         export repo_path=$GITLAB_LOG_PROJECT_PATH
                         python3 gitlab-github/gitlab-github.py
                     '''
