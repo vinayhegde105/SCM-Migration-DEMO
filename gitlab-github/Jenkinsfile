@@ -18,12 +18,15 @@ pipeline {
         stage('SCM Migration') {
             steps {
                 script {
+                    def gitlab_token = env.GITLAB_TOKEN
+                    def github_token = env.GITHUB_TOKEN
+
                     sh '''
                         #!/bin/bash
                         export gitlab_token=$GITLAB_TOKEN
                         export github_token=$GITHUB_TOKEN
                         export repo_path=$GITLAB_LOG_PROJECT_PATH
-                        python3 gitlab-github/gitlab-github.py
+                        # python3 gitlab-github/gitlab-github.py
                     '''
                     }
                 }
