@@ -18,14 +18,20 @@ pipeline {
         stage('SCM Migration') {
             steps {
                 script {
-                    sh '''
-                        #!/bin/bash
-                        export gitlab_token=$GITLAB_TOKEN
-                        export azure_token=$AZURE_TOKEN
-                        export repo_path=$GITLAB_LOG_PROJECT_PATH
-                    '''
-                    }
-                }
+        wrap([$class: 'MaskPasswordsBuildWrapper',
+              varPasswordPairs: [
+                  [password: "${GITLAB_TOKEN}", var: 'USR'],
+                  [password: "${AZURE_TOKEN}", var: 'PSW']
+              ]
+        ]) {
+            sh '''
+                #!/bin/bash
+                export gitlab_token=$GITLAB_TOKEN
+                export azure_token=$AZURE_TOKEN
+                export repo_path=$GITLAB_LOG_PROJECT_PATH
+            '''
+        }
+    }
             }
         }
     }
