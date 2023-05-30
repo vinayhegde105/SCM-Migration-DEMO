@@ -15,7 +15,7 @@ pipeline {
             }
         }
         
-        stage('Execute Commands') {
+        stage('SCM Migration') {
             steps {
                 script {
                     sh '''
