@@ -204,7 +204,7 @@ for index, row in df.iterrows():
         print("")
         if azure_branches==gitlab_branches :
             print("")
-            print("********************Branch Validation Done*******************888")
+            print("********************Branch Validation Done*******************")
             print("")
             print("")
             print(f"Branch counts are same for both the repository {project_to_import} i.e {azure_branches}")
