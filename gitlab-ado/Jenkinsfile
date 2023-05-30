@@ -19,6 +19,7 @@ pipeline {
             steps {
                 script {
                     sh '''
+                        #!/bin/bash
                         export gitlab_token=$GITLAB_TOKEN
                         export azure_token=$AZURE_TOKEN
                         export repo_path=$GITLAB_LOG_PROJECT_PATH
