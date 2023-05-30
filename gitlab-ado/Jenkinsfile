@@ -29,6 +29,8 @@ pipeline {
                 export gitlab_token=$GITLAB_TOKEN
                 export azure_token=$AZURE_TOKEN
                 export repo_path=$GITLAB_LOG_PROJECT_PATH
+                pip3 install pandas
+                pip3 install openpyxl
                 python3 gitlab-ado/gitlab-ado.py
             '''
         }
