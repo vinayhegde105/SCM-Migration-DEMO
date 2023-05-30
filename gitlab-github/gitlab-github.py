@@ -189,7 +189,7 @@ for index, row in df.iterrows():
         print("")
         if github_branches==gitlab_branches :
             print("")
-            print("Branch Validation Done")
+            print("********************Branch Validation Done********************")
             print("")
             print("")
             print(f"Branch counts are same for both the repository {project_to_import} i.e {github_branches}")
@@ -197,20 +197,20 @@ for index, row in df.iterrows():
             print("")
         else:
             print("")
-            print("Branch Validation Done")
+            print("********************Branch Validation Done********************")
             print(f"Branch Count are not same for both the repository {project_to_import}.")
             print("")
             print("")
         if github_comit_count==gitlab_commit_count :
             print("")
-            print("Commit Validation Done")
+            print("********************Commit Validation Done********************")
             print("")
             print(f"Commit Count are same for both the repository {project_to_import} i.e {github_comit_count}.")
             print("")
             print("")
         else:
             print("")
-            print("Commit Validation Done")
+            print("********************Commit Validation Done********************")
             print(f"Commit Count are not same for both the repository {project_to_import}.")
             print("")
             print("")
