@@ -5,7 +5,7 @@ from urllib.parse import quote
 import os
 
 # Read Excel file
-df = pd.read_excel('./github-to-gitlab.xlsx')
+df = pd.read_excel('./github-gitlab/github-to-gitlab.xlsx')
 
 github_token = os.getenv('GITHUB_TOKEN')
 gitlab_token = os.getenv('GITLAB_TOKEN')

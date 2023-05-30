@@ -7,7 +7,7 @@ import base64
 import os
 
 # Read Excel file
-df = pd.read_excel('./gitlab-to-github.xlsx')
+df = pd.read_excel('./gitlab-github/gitlab-to-github.xlsx')
 print("")
 github_token = os.getenv('GITHUB_TOKEN')
 gitlab_token = os.getenv('GITLAB_TOKEN')

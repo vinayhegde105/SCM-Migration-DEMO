@@ -8,7 +8,7 @@ import json
 
 
 # Read Excel file
-df = pd.read_excel('./gitlab-to-azure.xlsx')
+df = pd.read_excel('./gitlab-ado/gitlab-to-azure.xlsx')
 print("")
 azure_token = os.getenv('AZURE_TOKEN')
 gitlab_token = os.getenv('GITLAB_TOKEN')
