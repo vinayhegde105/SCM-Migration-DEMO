@@ -2,8 +2,10 @@ pipeline {
     agent any
     
     parameters {
-        password(name: 'GITLAB_TOKEN', defaultValue: '', description: 'Enter GITLAB_TOKEN',)
-        password(name: 'GITHUB_TOKEN', defaultValue: '', description: 'Enter GITHUB_TOKEN')
+        password(name: 'BITBUCKET_USERNAME', defaultValue: '', description: 'Enter BITBUCKET_USERNAME')
+        password(name: 'BITBUCKET_PASSWORD', defaultValue: '', description: 'Enter BITBUCKET_PASSWORD')
+        password(name: 'AZURE_TOKEN', defaultValue: '', description: 'Enter AZURE_TOKEN')
+        password(name: 'GITLAB_TOKEN', defaultValue: '', description: 'Enter GITLAB_TOKEN')
         string(name: 'GITLAB_LOG_PROJECT_PATH', defaultValue: '', description: 'Kindly paste in below format: \ngitlab_namespace/project_name')
     }
     
@@ -20,16 +22,22 @@ pipeline {
                 script {
         wrap([$class: 'MaskPasswordsBuildWrapper',
               varPasswordPairs: [
-                  [password: "${GITLAB_TOKEN}", var: 'GITLAB_TOKEN'],
-                  [password: "${GITHUB_TOKEN}", var: 'GITHUB_TOKEN']
+                  [password: "${BITBUCKET_USERNAME}", var: 'BITBUCKET_USERNAME'],
+                  [password: "${BITBUCKET_PASSWORD}", var: 'BITBUCKET_PASSWORD'],
+                  [password: "${AZURE_TOKEN}", var: 'AZURE_TOKEN'],
+                  [password: "${GITLAB_TOKEN}", var: 'GITLAB_TOKEN']
               ]
         ]) {
             sh '''
                 #!/bin/bash
-                export gitlab_token=$GITLAB_TOKEN
-                export github_token=$GITHUB_TOKEN
+                export bitbucket_username=$GITLAB_TOKEN
+                export bitbucket_password=$GITLAB_TOKEN
+                export azure_token=$GITLAB_TOKEN
+                export gitlab_token=$GITHUB_TOKEN
                 export repo_path=$GITLAB_LOG_PROJECT_PATH
-                python3 gitlab-github/gitlab-github.py
+                pip3 install pandas
+                pip3 install openpyxl
+                python3 ado-bitbucket/ado-bitbucket.py
             '''
         }
     }

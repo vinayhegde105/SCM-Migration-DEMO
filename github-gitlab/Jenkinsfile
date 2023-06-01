@@ -3,7 +3,7 @@ pipeline {
     
     parameters {
         password(name: 'GITHUB_TOKEN', defaultValue: '', description: 'Enter GITHUB_TOKEN')
-        password(name: 'GITLAB_TOKEN', defaultValue: '', description: 'Enter GITLAB_TOKEN',)
+        password(name: 'GITLAB_TOKEN', defaultValue: '', description: 'Enter GITLAB_TOKEN')
         string(name: 'GITLAB_LOG_PROJECT_PATH', defaultValue: '', description: 'Kindly paste in below format: \ngitlab_namespace/project_name')
     }
     
@@ -20,8 +20,8 @@ pipeline {
                 script {
         wrap([$class: 'MaskPasswordsBuildWrapper',
               varPasswordPairs: [
-                  [password: "${GITHUB_TOKEN}", var: 'GITHUB_TOKEN'],
-                  [password: "${GITLAB_TOKEN}", var: 'GITLAB_TOKEN']
+                  [password: "${GITLAB_TOKEN}", var: 'GITLAB_TOKEN'],
+                  [password: "${GITHUB_TOKEN}", var: 'GITHUB_TOKEN']
               ]
         ]) {
             sh '''
@@ -29,6 +29,8 @@ pipeline {
                 export gitlab_token=$GITLAB_TOKEN
                 export github_token=$GITHUB_TOKEN
                 export repo_path=$GITLAB_LOG_PROJECT_PATH
+                pip3 install pandas
+                pip3 install openpyxl
                 python3 github-gitlab/github-gitlab.py
             '''
         }
