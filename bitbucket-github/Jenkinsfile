@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     parameters {
-        password(name: 'BITBUCKET_USERNAME', defaultValue: '', description: 'Enter BITBUCKET_USERNAME')
+        string(name: 'BITBUCKET_USERNAME', defaultValue: '', description: 'Enter BITBUCKET_USERNAME')
         password(name: 'BITBUCKET_PASSWORD', defaultValue: '', description: 'Enter BITBUCKET_PASSWORD')
         password(name: 'GITHUB_TOKEN', defaultValue: '', description: 'Enter GITHUB_TOKEN')
         password(name: 'GITLAB_TOKEN', defaultValue: '', description: 'Enter GITLAB_TOKEN')
@@ -22,7 +22,6 @@ pipeline {
                 script {
         wrap([$class: 'MaskPasswordsBuildWrapper',
               varPasswordPairs: [
-                  [password: "${BITBUCKET_USERNAME}", var: 'BITBUCKET_USERNAME'],
                   [password: "${BITBUCKET_PASSWORD}", var: 'BITBUCKET_PASSWORD'],
                   [password: "${GITHUB_TOKEN}", var: 'GITHUB_TOKEN'],
                   [password: "${GITLAB_TOKEN}", var: 'GITLAB_TOKEN']
@@ -30,10 +29,10 @@ pipeline {
         ]) {
             sh '''
                 #!/bin/bash
-                export bitbucket_username=$GITLAB_TOKEN
-                export bitbucket_password=$GITLAB_TOKEN
-                export github_token=$GITLAB_TOKEN
-                export gitlab_token=$GITHUB_TOKEN
+                export bitbucket_username=$BITBUCKET_USERNAME
+                export bitbucket_password=$BITBUCKET_PASSWORD
+                export github_token=$GITHUB_TOKEN
+                export gitlab_token=$GITLAB_TOKEN
                 export repo_path=$GITLAB_LOG_PROJECT_PATH
                 pip3 install pandas
                 pip3 install openpyxl
