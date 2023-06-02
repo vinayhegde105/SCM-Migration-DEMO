@@ -70,6 +70,7 @@ for index, row in df.iterrows():
     response = requests.post(api, json=repo_data, headers=headers,auth=auth)
     if response.status_code == 200:
         print(f"Successfully created repository {project_to_import} on BitBucket.")
+        time.sleep(5)
     else:
         error_message = f"Error occurred while creating the repository {project_to_import} with status code: {response.status_code} \n {response.text}"
         print(error_message)
