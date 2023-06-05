@@ -42,5 +42,16 @@ pipeline {
     }
             }
         }
+        stage('Send Email') {
+            steps {
+                script {
+                    emailext attachmentsPattern: '*.csv', 
+                                body: 'Please find the attached CSV files.', 
+                                mimeType: 'text/csv', 
+                                subject: 'CSV Files',
+                                to: 'sssssabhahit@gmail.com'
+                    }
+            }
+        }
     }
 }
