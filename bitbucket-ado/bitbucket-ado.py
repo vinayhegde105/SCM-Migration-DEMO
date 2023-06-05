@@ -208,7 +208,7 @@ for index, row in df.iterrows():
         print("")
         if azure_branches==bitbucket_branches :
             print("")
-            print("Branch Validation Done")
+            print("********************Branch Validation Done********************")
             print("")
             print("")
             print(f"Branch counts are same for both the repository {repo_name_to_import} i.e {azure_branches}")
@@ -216,20 +216,20 @@ for index, row in df.iterrows():
             print("")
         else:
             print("")
-            print("Branch Validation Done")
+            print("********************Branch Validation Done********************")
             print(f"Branch Count are not same for both the repository {repo_name_to_import}.")
             print("")
             print("")
         if azure_commit_count==bitbucket_comit_count :
             print("")
-            print("Commit Validation Done")
+            print("********************Commit Validation Done********************")
             print("")
             print(f"Commit Count are same for both the repository {repo_name_to_import} i.e {azure_commit_count}.")
             print("")
             print("")
         else:
             print("")
-            print("Commit Validation Done")
+            print("********************Commit Validation Done********************")
             print(f"Commit Count are not same for both the repository {repo_name_to_import}.")
             print("")
             print("")
