@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/vinayhegde105/SCM-Migration-DEMO.git'
+                git credentialsId: 'SCM_MIGRATOR_CRED', branch: 'main', url: '${SCM_MIGRATOR_SOURCE_CODE}'
             }
         }
         
@@ -37,16 +37,16 @@ pipeline {
     }
             }
         }
-        stage('Send Email') {
-            steps {
-                script {
-                    emailext attachmentsPattern: '*.csv', 
-                                body: 'Please find the attached CSV files.', 
-                                mimeType: 'text/csv', 
-                                subject: 'CSV Files',
-                                to: 'sssssabhahit@gmail.com'
-                    }
-            }
-        }
+        // stage('Send Email') {
+        //     steps {
+        //         script {
+        //             emailext attachmentsPattern: '*.csv', 
+        //                         body: 'Please find the attached CSV files.', 
+        //                         mimeType: 'text/csv', 
+        //                         subject: 'CSV Files',
+        //                         to: 'sssssabhahit@gmail.com'
+        //             }
+        //     }
+        // }
     }
 }
