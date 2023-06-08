@@ -92,7 +92,7 @@ for index, row in df.iterrows():
         print(f"Successfully imported {repo_name_to_import} from BitBucket to GitHub.")
         success_data.append([repo_name_to_import, import_response.status_code])
         github_urls.append(f'https://github.com/{github_username}/{repo_name_to_import}')
-        time.sleep(15)
+        time.sleep(30)
         print()
         print("")
         ##bitbucket branch count
@@ -135,6 +135,15 @@ for index, row in df.iterrows():
             else:
                 print(f"Error getting bitbucket commit count: {response.status_code} \n {response.text}")
         bitbucket_comit_count=commit_count
+        ## Bitbucket Repo Size
+        api_url = f'https://api.bitbucket.org/2.0/repositories/{workspace_id}/{repo_name_to_import}'
+        response = requests.get(api_url, auth=auth)
+        if response.status_code == 200:
+            repository_size_bytes = response.json()["size"]
+            repository_size_mb = repository_size_bytes / (1024 * 1024)
+            bitbucket_size=f'{repository_size_mb:.2f} MB'
+        else: 
+            print(f'Error fetching Bitbucket repository information: {response.status_code} {response.text}')
         #GitHub Branches Count
         print(f"Target Repository - {repo_name_to_import} branch validation is in progress...")
         per_page = 100
@@ -187,6 +196,15 @@ for index, row in df.iterrows():
                 print(f"Error: {response.status_code} \n {response.text}")
                 break
         github_comit_count=commit_count
+        ##Github Repo Size
+        url = f'https://api.github.com/repos/{github_username}/{repo_name_to_import}'
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            repo_size = response.json()['size']
+            repo_size = repo_size/1024 
+            github_size= f'{repo_size:.2f} MB'
+        else:
+            print(f'Error fetching github repository information: {response.status_code} {response.text}')
         print("")
         print("")
         if github_branches==bitbucket_branches :
@@ -216,7 +234,7 @@ for index, row in df.iterrows():
             print(f"Commit Count are not same for both the repository {repo_name_to_import}.")
             print("")
             print("")
-        validation_data.append([workspace_id,repo_name_to_import,github_username,bitbucket_branches,github_branches,bitbucket_comit_count,github_comit_count])
+        validation_data.append([workspace_id,repo_name_to_import,github_username,bitbucket_branches,github_branches,bitbucket_comit_count,github_comit_count,bitbucket_size,github_size])
     else:
         error_message=f"Error occurred while importing {repo_name_to_import} from BitBucket to GitHub with status code: {import_response.status_code} \n {import_response.text}"
         print(error_message)
@@ -231,7 +249,7 @@ failure_df = pd.DataFrame(failure_data, columns=['Repository Name', 'Status Code
 failure_df.index =failure_df.index+1
 failure_df.to_csv('failure.csv', index_label='Sr')
 # Create validation_data.csv
-validation_df = pd.DataFrame(validation_data, columns=['Source BitBucket workspace id', 'Source BitBucket Repository Name', 'Target GitHub Username','Source Branches','Target Branches','Source Commits','Target Commits'])
+validation_df = pd.DataFrame(validation_data, columns=['Source BitBucket workspace id', 'Source BitBucket Repository Name', 'Target GitHub Username','Source Branches','Target Branches','Source Commits','Target Commits','Source Repo Size','Target Repo Size'])
 validation_df.index =validation_df.index+1
 validation_df.to_csv('validation-data.csv', index_label='Sr')
 print("")

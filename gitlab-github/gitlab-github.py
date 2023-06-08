@@ -90,7 +90,7 @@ for index, row in df.iterrows():
         print(f"Successfully imported {project_to_import} from GitLab to GitHub.")
         success_data.append([project_to_import, import_response.status_code])
         github_urls.append(f'https://github.com/{github_username}/{project_to_import}')
-        time.sleep(15)
+        time.sleep(30)
         print()
         print("")
         ## Gitlab Branches Count
@@ -105,9 +105,9 @@ for index, row in df.iterrows():
 
         if response.status_code == 200:
             total_branches_2 = int(response.headers.get('X-Total'))
-            gitlab_branches=total_branches_2
         else:
             print(f'Request failed with status code {response.status_code} \n {response.text}')
+        gitlab_branches=total_branches_2
 
         ##GitLab Commit Count
         print(f"Source Repository - {project_to_import} commit validation is in progress...")
@@ -133,6 +133,17 @@ for index, row in df.iterrows():
                 print(f"Error: {response.status_code} \n {response.text}")
                 break
         gitlab_commit_count=commit_count
+        ##Gitlab Project Size
+        api_url = f"https://gitlab.com/api/v4/projects/{encoded_path}?statistics=true"
+        response = requests.get(api_url, headers=headers)
+        response_json = response.json()
+
+        if response.status_code == 200:
+            repository_storage_bytes = response_json["statistics"]["storage_size"]
+            repository_storage_mb = repository_storage_bytes / (1024 * 1024)
+            gitlab_size= f'{repository_storage_mb:.2f} MB'
+        else:
+            print("Failed to fetch gitlab project size")
        #GitHub Branches Count
         print(f"Target Repository - {project_to_import} branch validation is in progress...")
         per_page = 100
@@ -185,6 +196,16 @@ for index, row in df.iterrows():
                 print(f"Error: {response.status_code} \n {response.text}")
                 break
         github_comit_count=commit_count
+         ##Github Repo Size
+        url = f'https://api.github.com/repos/{github_username}/{project_to_import}'
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            repo_size = response.json()['size']
+            repo_size = repo_size/1024 
+            github_size= f'{repo_size:.2f} MB'
+        else:
+            print(f'Error fetching github repository information: {response.status_code} {response.text}')
         print("")
         print("")
         if github_branches==gitlab_branches :
@@ -214,7 +235,7 @@ for index, row in df.iterrows():
             print(f"Commit Count are not same for both the repository {project_to_import}.")
             print("")
             print("")
-        validation_data.append([gitlab_project_namespace,project_to_import,github_username,gitlab_branches,github_branches,gitlab_commit_count,github_comit_count])
+        validation_data.append([gitlab_project_namespace,project_to_import,github_username,gitlab_branches,github_branches,gitlab_commit_count,github_comit_count,gitlab_size,github_size])
     else:
         error_message=f"Error occurred while importing {project_to_import} from GitLab to GitHub with status code: {import_response.status_code} \n {import_response.text}"
         print(error_message)
@@ -230,7 +251,7 @@ failure_df = pd.DataFrame(failure_data, columns=['Repository Name', 'Status Code
 failure_df.index =failure_df.index+1
 failure_df.to_csv('failure.csv', index_label='Sr')
 # Create validation_data.csv
-validation_df = pd.DataFrame(validation_data, columns=['Source GitLab Namespace', 'Source GitLab Project Name', 'Target GitHub Username','Source Branches','Target Branches','Source Commits','Target Commits'])
+validation_df = pd.DataFrame(validation_data, columns=['Source GitLab Namespace', 'Source GitLab Project Name', 'Target GitHub Username','Source Branches','Target Branches','Source Commits','Target Commits','Source Repo Size','Target Repo Size'])
 validation_df.index =validation_df.index+1
 validation_df.to_csv('validation-data.csv', index_label='Sr')
 print("")
@@ -251,27 +272,6 @@ for file in file_path:
         print(f"Published {file} file to Package Registry in GitLab")
     else:
         print(f"Error while publishing {file} to Package Registry with status code {response.status_code}\n{response.text}")
-# file_path=['success.csv','failure.csv','validation-data.csv']
-# print("")
-# file_path = ['success.csv', 'failure.csv', 'validation-data.csv'] 
-# for file in file_path:
-#     with open(file, 'rb') as file_obj:
-#         content = file_obj.read()
-#         encoded_content = base64.b64encode(content).decode('utf-8')
-#     api_url = f'https://api.github.com/repos/{github_username}/{log_repo_name}/contents/gitlab-to-github-logs/{file}'
-#     headers = {
-#         'Authorization': f'Token {github_token}',
-#         'Accept': 'application/vnd.github.v3+json'
-#     }
-#     data = {
-#         'message': f'Publishing {file}',
-#         'content': encoded_content,
-#     }
-#     response = requests.put(api_url, headers=headers, json=data)
-#     if response.status_code == 201:
-#         print(f'File {file} published successfully in repository {log_repo_name}.')
-#     else:
-#         print(f'Failed to publish {file}. Error:', response.text)
 
 
 

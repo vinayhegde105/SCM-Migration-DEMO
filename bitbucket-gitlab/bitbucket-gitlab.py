@@ -76,7 +76,7 @@ for index, row in df.iterrows():
         print(f"Successfully imported {repo_name_to_import} from BitBucket to GitLab.")
         gitlab_urls.append(f'https://gitlab.com/{gitlab_target_namespace}/{repo_name_to_import}')
         print("")
-        time.sleep(15)
+        time.sleep(30)
         ##bitbucket branch count
         print(f"Source Repository - {repo_name_to_import} branch validation is in progress...")
         auth=(bitbucket_username,bitbucket_password)
@@ -117,6 +117,15 @@ for index, row in df.iterrows():
             else:
                 print(f"Error getting bitbucket commit count: {response.status_code} \n {response.text}")
         bitbucket_comit_count=commit_count
+        ## Bitbucket Repo Size
+        api_url = f'https://api.bitbucket.org/2.0/repositories/{workspace_id}/{repo_name_to_import}'
+        response = requests.get(api_url, auth=auth)
+        if response.status_code == 200:
+            repository_size_bytes = response.json()["size"]
+            repository_size_mb = repository_size_bytes / (1024 * 1024)
+            bitbucket_size=f'{repository_size_mb:.2f} MB'
+        else: 
+            print(f'Error fetching Bitbucket repository information: {response.status_code} {response.text}')
         ## Gitlab Branches Count
         print(f"Target Repository - {repo_name_to_import} branch validation is in progress...")
         path=f"{gitlab_target_namespace}/{repo_name_to_import}"
@@ -158,6 +167,17 @@ for index, row in df.iterrows():
                 print(f"Error: {response.status_code} \n {response.text}")
                 break
         gitlab_commit_count=commit_count
+        ##Gitlab Project Size
+        api_url = f"https://gitlab.com/api/v4/projects/{encoded_path}?statistics=true"
+        response = requests.get(api_url, headers=headers)
+        response_json = response.json()
+
+        if response.status_code == 200:
+            repository_storage_bytes = response_json["statistics"]["storage_size"]
+            repository_storage_mb = repository_storage_bytes / (1024 * 1024)
+            gitlab_size= f'{repository_storage_mb:.2f} MB'
+        else:
+            print("Failed to fetch gitlab project size")
         print("")
         print("")
         if gitlab_branches==bitbucket_branches :
@@ -187,7 +207,7 @@ for index, row in df.iterrows():
             print(f"Commit Count are not same for both the repository {repo_name_to_import}.")
             print("")
             print("")
-        validation_data.append([workspace_id,repo_name_to_import,gitlab_target_namespace,bitbucket_branches,gitlab_branches,bitbucket_comit_count,gitlab_commit_count])
+        validation_data.append([workspace_id,repo_name_to_import,gitlab_target_namespace,bitbucket_branches,gitlab_branches,bitbucket_comit_count,gitlab_commit_count,bitbucket_size,gitlab_size])
     else:
         error_message=f"Error occurred while importing {repo_name_to_import} from BitBucket to GitLab with status code: {import_response.status_code} \n {import_response.text}"
         print(error_message)
@@ -203,7 +223,7 @@ failure_df = pd.DataFrame(failure_data, columns=['Repository Name', 'Status Code
 failure_df.index =failure_df.index+1
 failure_df.to_csv('failure.csv', index_label='Sr')
 # Create validation_data.csv
-validation_df = pd.DataFrame(validation_data, columns=['Source BitBucket workspace id', 'Source BitBucket Repository Name', 'Target Gitlab Namespace','Source Branches','Target Branches','Source Commits','Target Commits'])
+validation_df = pd.DataFrame(validation_data, columns=['Source BitBucket workspace id', 'Source BitBucket Repository Name', 'Target Gitlab Namespace','Source Branches','Target Branches','Source Commits','Target Commits','Source Repo Size','Target Repo Size'])
 validation_df.index =validation_df.index+1
 validation_df.to_csv('validation-data.csv', index_label='Sr')
 print("")

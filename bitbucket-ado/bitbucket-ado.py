@@ -124,7 +124,7 @@ for index, row in df.iterrows():
         print(f"Successfully imported {repo_name_to_import} from BitBucket to Azure Repos.")
         success_data.append([repo_name_to_import, import_response.status_code])
         azure_urls.append(f'https://dev.azure.com/{azure_target_namespace}/_git/{repo_name_to_import}')
-        time.sleep(15)
+        time.sleep(30)
         ##bitbucket branch count
         print(f"Source Repository - {repo_name_to_import} branch validation is in progress...")
         auth=(bitbucket_username,bitbucket_password)
@@ -166,7 +166,15 @@ for index, row in df.iterrows():
             else:
                 print(f"Error getting bitbucket commit count: {response.status_code} \n {response.text}")
         bitbucket_comit_count=commit_count
-        
+        ## Bitbucket Repo Size
+        api_url = f'https://api.bitbucket.org/2.0/repositories/{workspace_id}/{repo_name_to_import}'
+        response = requests.get(api_url, auth=auth)
+        if response.status_code == 200:
+            repository_size_bytes = response.json()["size"]
+            repository_size_mb = repository_size_bytes / (1024 * 1024)
+            bitbucket_size=f'{repository_size_mb:.2f} MB'
+        else: 
+            print(f'Error fetching Bitbucket repository information: {response.status_code} {response.text}')
         ##Azure Branch Count
         print(f"Target Repository - {repo_name_to_import} branch validation is in progress...")
         url = f'https://dev.azure.com/{azure_target_namespace}/_apis/git/repositories/{repo_name_to_import}/refs?filter=heads/&api-version=7.0'
@@ -204,6 +212,15 @@ for index, row in df.iterrows():
                 print(f'Request failed with status code {response.status_code}')
                 break
         azure_commit_count=commit_count
+        ## Azure Repos Size
+        api_url = f'https://dev.azure.com/{azure_target_namespace}/_apis/git/repositories/{repo_name_to_import}?api-version=7.0'
+        response = requests.get(api_url, auth=("", azure_token))
+        if response.status_code == 200:
+            size_in_bytes = response.json()["size"]
+            size_in_mb = size_in_bytes / (1024*1024)
+            azure_size= f'{size_in_mb:.2f} MB'
+        else:
+            print(f'Error fetching Azure repository information: {response.status_code} {response.text}')
         print("")
         print("")
         if azure_branches==bitbucket_branches :
@@ -233,7 +250,7 @@ for index, row in df.iterrows():
             print(f"Commit Count are not same for both the repository {repo_name_to_import}.")
             print("")
             print("")
-        validation_data.append([workspace_id,repo_name_to_import,azure_target_namespace,bitbucket_branches,azure_branches,bitbucket_comit_count,azure_commit_count])
+        validation_data.append([workspace_id,repo_name_to_import,azure_target_namespace,bitbucket_branches,azure_branches,bitbucket_comit_count,azure_commit_count,bitbucket_size,azure_size])
     else:
         error_message=f"Error occurred while importing {repo_name_to_import} from BitBucket to Azure Repos with status code: {import_response.status_code} \n {import_response.text}"
         print(error_message)
@@ -249,7 +266,7 @@ failure_df = pd.DataFrame(failure_data, columns=['Repository Name', 'Status Code
 failure_df.index =failure_df.index+1
 failure_df.to_csv('failure.csv', index_label='Sr')
 # Create validation_data.csv
-validation_df = pd.DataFrame(validation_data, columns=['Source BitBucket Workspace ID', 'Source BitBucket Repository Name', 'Target Azure Namespace','Source Branches','Target Branches','Source Commits','Target Commits'])
+validation_df = pd.DataFrame(validation_data, columns=['Source BitBucket Workspace ID', 'Source BitBucket Repository Name', 'Target Azure Namespace','Source Branches','Target Branches','Source Commits','Target Commits','Source Repo Size','Target Repo Size'])
 validation_df.index =validation_df.index+1
 validation_df.to_csv('validation-data.csv', index_label='Sr')
 print("")

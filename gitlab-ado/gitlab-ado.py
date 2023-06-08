@@ -56,6 +56,7 @@ for index, row in df.iterrows():
         error_message =f"Error occurred while getting the project id of {project} with status code: {response.status_code} \n {response.text}"
         print(error_message)
         failure_data.append([project_to_import, response.status_code, error_message])
+        continue
 
     org_url = f"https://dev.azure.com/{organization}/_apis/serviceendpoint/endpoints?api-version=7.0"
     payload = json.dumps({
@@ -93,6 +94,7 @@ for index, row in df.iterrows():
         error_message =f"Error occurred while creating service endpoint with status code: {response.status_code} \n {response.text}"
         print(error_message)
         failure_data.append([project_to_import, response.status_code, error_message])
+        continue
     # Import from GitLab
     data = {
         "parameters": {
@@ -113,7 +115,7 @@ for index, row in df.iterrows():
         success_data.append([project_to_import, import_response.status_code])
         print("")
         azure_urls.append(f'https://dev.azure.com/{azure_target_namespace}/_git/{project_to_import}')
-        time.sleep(15)
+        time.sleep(30)
         ## Gitlab Branches Count
         print(f"Source Repository - {project_to_import} branch validation is in progress...")
         path=f"{gitlab_project_namespace}/{project_to_import}"
@@ -154,6 +156,17 @@ for index, row in df.iterrows():
                 print(f"Error: {response.status_code} \n {response.text}")
                 break
         gitlab_commit_count=commit_count
+        ##Gitlab Project Size
+        api_url = f"https://gitlab.com/api/v4/projects/{encoded_path}?statistics=true"
+        response = requests.get(api_url, headers=headers)
+        response_json = response.json()
+
+        if response.status_code == 200:
+            repository_storage_bytes = response_json["statistics"]["storage_size"]
+            repository_storage_mb = repository_storage_bytes / (1024 * 1024)
+            gitlab_size= f'{repository_storage_mb:.2f} MB'
+        else:
+            print("Failed to fetch gitlab project size")
         ##Azure Branch Count
         print(f"Target Repository - {project_to_import} branch validation is in progress...")
         url = f'https://dev.azure.com/{azure_target_namespace}/_apis/git/repositories/{project_to_import}/refs?filter=heads/&api-version=7.0'
@@ -200,11 +213,20 @@ for index, row in df.iterrows():
                 print(f'Request failed with status code {response.status_code}')
                 break
         azure_commit_count=commit_count
+        ## Azure Repos Size
+        api_url = f'https://dev.azure.com/{azure_target_namespace}/_apis/git/repositories/{project_to_import}?api-version=7.0'
+        response = requests.get(api_url, auth=("", azure_token))
+        if response.status_code == 200:
+            size_in_bytes = response.json()["size"]
+            size_in_mb = size_in_bytes / (1024*1024)
+            azure_size= f'{size_in_mb:.2f} MB'
+        else:
+            print(f'Error fetching Azure repository information: {response.status_code} {response.text}')
         print("")
         print("")
         if azure_branches==gitlab_branches :
             print("")
-            print("********************Branch Validation Done*******************")
+            print("********************Branch Validation Done********************")
             print("")
             print("")
             print(f"Branch counts are same for both the repository {project_to_import} i.e {azure_branches}")
@@ -229,7 +251,7 @@ for index, row in df.iterrows():
             print(f"Commit Count are not same for both the repository {project_to_import}.")
             print("")
             print("")
-        validation_data.append([gitlab_project_namespace,project_to_import,azure_target_namespace,gitlab_branches,azure_branches,gitlab_commit_count,azure_commit_count])
+        validation_data.append([gitlab_project_namespace,project_to_import,azure_target_namespace,gitlab_branches,azure_branches,gitlab_commit_count,azure_commit_count,gitlab_size,azure_size])
     else:
         error_message=f"Error occurred while importing {project_to_import} from GitLab to Azure Repos with status code: {import_response.status_code} \n {import_response.text}"
         print(error_message)
@@ -245,7 +267,7 @@ failure_df = pd.DataFrame(failure_data, columns=['Repository Name', 'Status Code
 failure_df.index =failure_df.index+1
 failure_df.to_csv('failure.csv', index_label='Sr')
 # Create validation_data.csv
-validation_df = pd.DataFrame(validation_data, columns=['Source GitLab Namespace', 'Source GitLab Project Name', 'Target Azure Namespace','Source Branches','Target Branches','Source Commits','Target Commits'])
+validation_df = pd.DataFrame(validation_data, columns=['Source GitLab Namespace', 'Source GitLab Project Name', 'Target Azure Namespace','Source Branches','Target Branches','Source Commits','Target Commits','Source Repo Size','Target Repo Size'])
 validation_df.index =validation_df.index+1
 validation_df.to_csv('validation-data.csv', index_label='Sr')
 print("")

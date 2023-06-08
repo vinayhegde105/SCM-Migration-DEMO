@@ -70,7 +70,6 @@ for index, row in df.iterrows():
     response = requests.post(api, json=repo_data, headers=headers,auth=auth)
     if response.status_code == 200:
         print(f"Successfully created repository {project_to_import} on BitBucket.")
-        time.sleep(5)
     else:
         error_message = f"Error occurred while creating the repository {project_to_import} with status code: {response.status_code} \n {response.text}"
         print(error_message)
@@ -97,7 +96,7 @@ for index, row in df.iterrows():
         print(f"Mirror clone pushed to Bitbucket repository {project_to_import} successfully.")
         bitbucket_urls.append(f'https://bitbucket.org/{bitbucket_workspace_id}/{project_to_import}.git')
         success_data.append([project_to_import, push_process.returncode])
-        time.sleep(15)
+        time.sleep(30)
         print("")
         ## Gitlab Branches Count
         print(f"Source Repository - {project_to_import} branch validation is in progress...")
@@ -139,6 +138,18 @@ for index, row in df.iterrows():
                 print(f"Error: {response.status_code} \n {response.text}")
                 break
         gitlab_commit_count=commit_count
+        
+        ##Gitlab Project Size
+        api_url = f"https://gitlab.com/api/v4/projects/{encoded_path}?statistics=true"
+        response = requests.get(api_url, headers=headers)
+        response_json = response.json()
+
+        if response.status_code == 200:
+            repository_storage_bytes = response_json["statistics"]["storage_size"]
+            repository_storage_mb = repository_storage_bytes / (1024 * 1024)
+            gitlab_size= f'{repository_storage_mb:.2f} MB'
+        else:
+            print("Failed to fetch gitlab project size")
         ##bitbucket branch count
         print(f"Target Repository - {project_to_import} branch validation is in progress...")
         auth=(bitbucket_username,bitbucket_password)
@@ -182,6 +193,15 @@ for index, row in df.iterrows():
             else:
                 print(f"Error getting bitbucket commit count: {response.status_code} \n {response.text}")
         bitbucket_comit_count=commit_count
+        ## Bitbucket Repo Size
+        api_url = f'https://api.bitbucket.org/2.0/repositories/{bitbucket_workspace_id}/{project_to_import}'
+        response = requests.get(api_url, auth=auth)
+        if response.status_code == 200:
+            repository_size_bytes = response.json()["size"]
+            repository_size_mb = repository_size_bytes / (1024 * 1024)
+            bitbucket_size=f'{repository_size_mb:.2f} MB'
+        else: 
+            print(f'Error fetching Bitbucket repository information: {response.status_code} {response.text}')
         print("")
         if bitbucket_branches==gitlab_branches :
             print("")
@@ -210,7 +230,7 @@ for index, row in df.iterrows():
             print(f"Commit Count are not same for both the repository {project_to_import}.")
             print("")
             print("")
-        validation_data.append([gitlab_project_namespace,project_to_import,bitbucket_workspace_id,gitlab_branches,bitbucket_branches,gitlab_commit_count,bitbucket_comit_count])
+        validation_data.append([gitlab_project_namespace,project_to_import,bitbucket_workspace_id,gitlab_branches,bitbucket_branches,gitlab_commit_count,bitbucket_comit_count,gitlab_size,bitbucket_size])
         
     else:
         error_message=f"Error occurred while pushing the mirror clone to Bitbucket repository {project_to_import}. Return code: {push_process.returncode}"
@@ -229,7 +249,7 @@ failure_df = pd.DataFrame(failure_data, columns=['Repository Name', 'Status Code
 failure_df.index =failure_df.index+1
 failure_df.to_csv('failure.csv', index_label='Sr')
 # Create validation_data.csv
-validation_df = pd.DataFrame(validation_data, columns=['Source GitLab Namespace', 'Source GitLab Project Name', 'Target BitBucket workspace id','Source Branches','Target Branches','Source Commits','Target Commits'])
+validation_df = pd.DataFrame(validation_data, columns=['Source GitLab Namespace', 'Source GitLab Project Name', 'Target BitBucket workspace id','Source Branches','Target Branches','Source Commits','Target Commits','Source Repo Size','Target Repo Size'])
 validation_df.index =validation_df.index+1
 validation_df.to_csv('validation-data.csv', index_label='Sr')
 print("")

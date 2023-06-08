@@ -128,6 +128,15 @@ for index, row in df.iterrows():
                 print(f'Request failed with status code {response.status_code}')
                 break
         azure_commit_count=commit_count
+        ##Azure Repo size
+        api_url = f'https://dev.azure.com/{azure_project_namespace}/_apis/git/repositories/{repo_to_import}?api-version=7.0'
+        response = requests.get(api_url, auth=("", azure_token))
+        if response.status_code == 200:
+            size_in_bytes = response.json()["size"]
+            size_in_mb = size_in_bytes / (1024*1024)
+            azure_size= f'{size_in_mb:.2f} MB'
+        else:
+            print(f'Error fetching Azure repository information: {response.status_code} {response.text}')
         #GitHub Branches Count
         print(f"Target Repository - {repo_to_import} branch validation is in progress...")
         per_page = 100
@@ -180,6 +189,16 @@ for index, row in df.iterrows():
                 print(f"Error: {response.status_code} \n {response.text}")
                 break
         github_comit_count=commit_count
+        ##Github Repo Size
+        url = f'https://api.github.com/repos/{github_username}/{repo_to_import}'
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            repo_size = response.json()['size']
+            repo_size = repo_size/1024 
+            github_size= f'{repo_size:.2f} MB'
+        else:
+            print(f'Error fetching github repository information: {response.status_code} {response.text}')
         print("")
         if azure_branches==github_branches :
             print("")
@@ -208,7 +227,7 @@ for index, row in df.iterrows():
             print(f"Commit Count are not same for both the repository {repo_to_import}.")
             print("")
             print("")
-        validation_data.append([azure_project_namespace,repo_to_import,github_username,azure_branches,github_branches,azure_commit_count,github_comit_count])
+        validation_data.append([azure_project_namespace,repo_to_import,github_username,azure_branches,github_branches,azure_commit_count,github_comit_count,azure_size,github_size])
     else:
         error_message=f"Error occurred while importing {repo_to_import} from Azure Repos to GitHub with status code: {import_response.status_code} \n {import_response.text}"
         print(error_message)
@@ -223,7 +242,7 @@ failure_df = pd.DataFrame(failure_data, columns=['Repository Name', 'Status Code
 failure_df.index =failure_df.index+1
 failure_df.to_csv('failure.csv', index_label='Sr')
 # Create validation_data.csv
-validation_df = pd.DataFrame(validation_data, columns=['Source Azure Project Namespace', 'Source Azure Repository Name', 'Target GitHub Username','Source Branches','Target Branches','Source Commits','Target Commits'])
+validation_df = pd.DataFrame(validation_data, columns=['Source Azure Project Namespace', 'Source Azure Repository Name', 'Target GitHub Username','Source Branches','Target Branches','Source Commits','Target Commits','Source Repo Size','Target Repo Size'])
 validation_df.index =validation_df.index+1
 validation_df.to_csv('validation-data.csv', index_label='Sr')
 print("")
